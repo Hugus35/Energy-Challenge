@@ -57,8 +57,9 @@ def optimization(X, y, model, params, my_score, verbose = 3):
 
 def fit_models(X, y, verbose, score, shuffle = False, models = ['forest', 'KNN', 'SVM', 'XGB', 'regression']):
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, shuffle = shuffle, random_state = 42)
-    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, shuffle = shuffle, random_state = 1)
+    trained_models = []
+
     # RANDOM FOREST
     if 'forest' in models :
         forest = RandomForestRegressor()
@@ -81,6 +82,7 @@ def fit_models(X, y, verbose, score, shuffle = False, models = ['forest', 'KNN',
         print("Random Forest :\n")
         print(f"Best params : {best_params}\n")
         print_scores(X_train, y_train, X_test, y_test, forest)
+        trained_models.append(forest)
 
 
     # KNN
@@ -105,6 +107,7 @@ def fit_models(X, y, verbose, score, shuffle = False, models = ['forest', 'KNN',
         print("KNN :\n")
         print(f"Best params : {best_params}\n")
         print_scores(X_train_scaled, y_train, X_test_scaled, y_test, KNN)
+        trained_models.append(KNN)
     
 
     # SVM
@@ -117,9 +120,9 @@ def fit_models(X, y, verbose, score, shuffle = False, models = ['forest', 'KNN',
         params = {
             'C': [1, 10, 100],         # Valeurs de régularisation
             'epsilon': [0.01, 0.1],    # Marge
-            'kernel': ['rbf', 'poly', 'linear'],    # Noyau
-            'gamma': ['auto'],      # Coefficients du noyau RBF
-            'degree' : [2]
+            'kernel': ['poly', 'linear'],    # Noyau
+            #'gamma': ['auto'],      # Coefficients du noyau RBF
+            'degree' : [2, 3]
         }
 
         grid = GridSearchCV(SVM, params, cv = 5, scoring = score, verbose = verbose, return_train_score = True)
@@ -133,6 +136,7 @@ def fit_models(X, y, verbose, score, shuffle = False, models = ['forest', 'KNN',
         print("SVR :\n")
         print(f"Best params : {best_params}\n")
         print_scores(X_train_scaled, y_train, X_test_scaled, y_test, SVM)
+        trained_models.append(SVM)
 
 
     # XGB
@@ -140,12 +144,13 @@ def fit_models(X, y, verbose, score, shuffle = False, models = ['forest', 'KNN',
         XGB = xgb.XGBRegressor()
 
         params = {
-            'n_estimators': [10, 50, 100],
-            'max_depth': [None, 20],
-            'min_samples_split': [10],
-            'min_samples_leaf': [1, 4]
+            "n_estimators": [10, 50],        # Nombre d'arbres
+            "learning_rate": [0.01, 0.1, 0.2],     # Taux d'apprentissage
+            "max_depth": [3, 5],                # Profondeur maximale des arbres
+            "subsample": [0.8, 1.0],               # Fraction des échantillons utilisés par arbre
+            "colsample_bytree": [0.8, 1.0],        # Fraction des colonnes utilisées par arbre
+            "reg_alpha": [0, 0.1, 1],              # Régularisation L1
             }
-        
 
         grid = GridSearchCV(XGB, params, cv = 5, scoring = score, verbose = verbose, return_train_score = True)
         grid.fit(X_train_scaled, y_train)
@@ -158,6 +163,7 @@ def fit_models(X, y, verbose, score, shuffle = False, models = ['forest', 'KNN',
         print("XGB :\n")
         print(f"Best params : {best_params}\n")
         print_scores(X_train, y_train, X_test, y_test, XGB)
+        trained_models.append(XGB)
 
     # Linear Regression
     if 'regression' in models:
@@ -165,9 +171,10 @@ def fit_models(X, y, verbose, score, shuffle = False, models = ['forest', 'KNN',
         reg.fit(X_train, y_train)
         print("Linear Regression :\n")
         print_scores(X_train, y_train, X_test, y_test, reg)
+        trained_models.append(reg)
 
 
-        #return forest, KNN, SVM, XGB, reg
+    return trained_models
 
 
 
